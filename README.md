@@ -1,11 +1,48 @@
+[image1]: ./images/path_planning_overview.png "path planning"
+[image2]: ./images/behavior_planning_overview.png "path planning"
+[image3]: ./images/path_planning_graphic.png "path planning"
+[image4]: ./images/video_screencap.png "Success"
+
 # CarND-Path-Planning-Project
-Self-Driving Car Engineer Nanodegree Program
+Term 3 project of the Udaciy Self-Driving Car Engineer Nanodegree Program. This project is focused on the programming of a path planning program for the Udacity simulator which deterministically control the trajectory of the ego vehicle and includes a behavior planning logic to enable the car to change lanes when it is safe to do so in order to maintain the speed limit of 50 mph. The specific requirements are detailed in [Project Rubic](https://review.udacity.com/#!/rubrics/1971/view):
+* The car is able to drive at least 4.32 miles without incident.
+* The car drives according to the speed limit.
+* Max Acceleration (10 m/s^2) and Jerk (10 m/s^3) are not Exceeded.
+* Car does not have collisions.
+* The car stays in its lane, except for the time between changing lanes.
+* The car is able to smoothly change lanes when it makes sense to do so.
 
-Project Rubic
-https://review.udacity.com/#!/rubrics/1971/view
+# Solution
+
+The path planning program is outlined below. The solution I followed is an expansion of the approach presented in the project walk-through (https://youtu.be/7sI3VHFPP0w). The trajectory calculation is helped with the use of the spline library from [Tino Kluge](https://kluge.in-chemnitz.de/opensource/spline/spline.h). This made it possible to fit prediction points along a spline to make smooth transitions between lanes.
+
+![alt text][image1]
+
+Once the ego vehicle could drive along the highway, the heart of the program is the behavior planning and logic of the Finite State Machine (FSM) approach. The FSM is simply a concept in programming to account for different states of a system and actions that need to be taken.
+
+![alt text][image2]
+
+The FSM approach here is programmed as a set of if/else statements. First, the state of the ego vehicle and the other vehicles on the road (tracked vehicles) is assessed. The sensor_fusion vector contained waypoint, speed, and Frenet coordinate data for the vehicles on the road. This allowed the state of surrounding vehicles to be assessed. A distance threshold was defined so that if a car is 20m or less in front of the ego vehicle, the ego vehicle will slow down so as not to collied with it. Otherwise, it will accelerate to a target velocity of 49.5 mph and maintain that speed unless it encounters another car. If it does come up behind another car, it will check the lanes right and left, and then transition if possible. A tuning parameter was included to aide in making a smooth lane change without colliding with adjacent vehicles. The gap distance between the ego and tracked vehicles was also evaluated, and after testing gaps from 20m to 40m, the final value of 20m provided the best performance.
+
+![alt text][image3]
+
+# Discussion and Next Steps
+The path planning program was able to fulfill the Rubic requirements as shown in the driving video:
+
+![alt text][image4]
+
+There are various improvements that can be made in the program. From a safety standpoint, I only considered that the car would pass on the right or left, but it would be better to only pass on the left if possible. I also avoided trying to make the car create double lane changes in one continuous maneuver. The FSM was also rather simplistic. It can be expanded to include more cases where there are multiple cars ahead, and it may be better to change the left rather than the right lane. However, I see this as reason to move beyond the deterministic FSM and into an artificial intelligence approach.
+
+While it was possible to build a behavior planning system which allows the ego vehicle to smoothly change lanes and avoid collisions, it is up to the programmer to properly predict each possible way in which the system could fail. This makes it difficult to predict edge cases which do not occur very often. This is a very good case to use Reinforcement Learning in order to train and tune the parameters such as when to change lanes. This can be done in a simulation environment such as CARLA and use Python and necessary libraries to train the ego vehicle as an agent in the environment. Penalties can be assigned for collisions, acceleration constraints, etc. Rewards would be the vehicle speed and comfort of the driving experience. This would ideally replace the FSM approach, and be more robust, given enough training data. I will be using the following resources to learn about RL in the CARLA simulation environment:
+
+[Hands-On Intelligent Agents with OpenAI Gym](https://www.packtpub.com/big-data-and-business-intelligence/hands-intelligent-agents-openai-gym)
+
+[Hands-On-Intelligent-Agents-with-OpenAI-Gym GitHub](https://github.com/PacktPublishing/Hands-On-Intelligent-Agents-with-OpenAI-Gym)
+
+[Programming Autonomous self-driving cars with Carla and Python](https://youtu.be/J1F32aVSYaU)
 
 
-# Udacity Description
+# Original Udacity Description
 
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).  
@@ -49,13 +86,13 @@ Here is the data provided from the Simulator to the C++ Program
 #### Previous path data given to the Planner
 
 //Note: Return the previous list but with processed points removed, can be a nice tool to show how far along
-the path has processed since last time. 
+the path has processed since last time.
 
 ["previous_path_x"] The previous list of x points previously given to the simulator
 
 ["previous_path_y"] The previous list of y points previously given to the simulator
 
-#### Previous path's end s and d values 
+#### Previous path's end s and d values
 
 ["end_path_s"] The previous list's last point's frenet s value
 
@@ -63,7 +100,7 @@ the path has processed since last time.
 
 #### Sensor Fusion Data, a list of all other car's attributes on the same side of the road. (No Noise)
 
-["sensor_fusion"] A 2d vector of cars and then that car's [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, car's s position in frenet coordinates, car's d position in frenet coordinates. 
+["sensor_fusion"] A 2d vector of cars and then that car's [car's unique ID, car's x position in map coordinates, car's y position in map coordinates, car's x velocity in m/s, car's y velocity in m/s, car's s position in frenet coordinates, car's d position in frenet coordinates.
 
 ## Details
 
@@ -93,7 +130,7 @@ A really helpful resource for doing this project and creating smooth trajectorie
   * Run either `install-mac.sh` or `install-ubuntu.sh`.
   * If you install from source, checkout to commit `e94b6e1`, i.e.
     ```
-    git clone https://github.com/uWebSockets/uWebSockets 
+    git clone https://github.com/uWebSockets/uWebSockets
     cd uWebSockets
     git checkout e94b6e1
     ```
@@ -148,4 +185,3 @@ still be compilable with cmake and make./
 
 ## How to write a README
 A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
